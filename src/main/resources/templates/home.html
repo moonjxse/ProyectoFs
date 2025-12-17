@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Home</title>
+</head>
+<body>
+    <h2>Welcome</h2>
+    <div id="userInfo"></div>
+    <div id="products"></div>
+    <div id="adminPanel" style="display:none;">
+        <h3>Admin Panel</h3>
+        <button onclick="addProduct()">Add Product</button>
+        <button onclick="deleteProduct()">Delete Product</button>
+    </div>
+    <button onclick="logout()">Logout</button>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/login';
+        }
+
+        function parseJwt(token) {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            return JSON.parse(jsonPayload);
+        }
+
+        const payload = parseJwt(token);
+        document.getElementById('userInfo').textContent = 'Logged in as: ' + payload.sub;
+
+        // Check if user has ADMIN role (assuming roles are in token)
+        // For simplicity, since we use username, check if username is admin
+        if (payload.sub === 'admin') {
+            document.getElementById('adminPanel').style.display = 'block';
+        }
+
+        async function loadProducts() {
+            const response = await fetch('/api/productos', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (response.ok) {
+                const products = await response.json();
+                document.getElementById('products').innerHTML = '<pre>' + JSON.stringify(products, null, 2) + '</pre>';
+            } else {
+                document.getElementById('products').textContent = 'Failed to load products';
+            }
+        }
+
+        function addProduct() {
+            // Simple prompt for demo
+            const nombre = prompt('Nombre:');
+            const precio = prompt('Precio:');
+            const stock = prompt('Stock:');
+            const imagen = prompt('Imagen:');
+            fetch('/api/productos', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ nombre, precio: parseFloat(precio), stock: parseInt(stock), imagen })
+            }).then(() => loadProducts());
+        }
+
+        function deleteProduct() {
+            const id = prompt('ID to delete:');
+            fetch('/api/productos/' + id, {
+                method: 'DELETE',
+                headers: { 'Authorization': 'Bearer ' + token }
+            }).then(() => loadProducts());
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+        }
+
+        loadProducts();
+    </script>
+</body>
+</html>
