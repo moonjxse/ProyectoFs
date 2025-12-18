@@ -23,7 +23,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 @RestController
 @RequestMapping("/api/auth")
 @CrossOrigin(origins = "*")
-//@Tag(name = "Autenticación", description = "Endpoints para autenticación y registro de usuarios")
+
 public class AuthController {
 
     @Autowired
@@ -33,7 +33,7 @@ public class AuthController {
     private UserRepository userRepository;
 
     @Autowired
-    private RoleRepository roleRepository; // Need to create
+    private RoleRepository roleRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -42,11 +42,7 @@ public class AuthController {
     private JwtUtil jwtUtil;
 
     @PostMapping("/login")
-    //@Operation(summary = "Iniciar sesión", description = "Autentica a un usuario y devuelve un token JWT")
-    //@ApiResponses(value = {
-    //    @ApiResponse(responseCode = "200", description = "Login exitoso"),
-    //    @ApiResponse(responseCode = "401", description = "Credenciales inválidas")
-    //})
+   
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
@@ -56,11 +52,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    //@Operation(summary = "Registrar usuario", description = "Registra un nuevo usuario en el sistema")
-    //@ApiResponses(value = {
-    //    @ApiResponse(responseCode = "200", description = "Usuario registrado exitosamente"),
-    //    @ApiResponse(responseCode = "400", description = "Nombre de usuario ya existe")
-    //})
+    
     public ResponseEntity<?> register(@RequestBody RegisterRequest registerRequest) {
         if (userRepository.findByUsername(registerRequest.getUsername()).isPresent()) {
             return ResponseEntity.badRequest().body("Username is already taken!");
@@ -81,7 +73,7 @@ public class AuthController {
     public static class LoginRequest {
         private String username;
         private String password;
-        // getters and setters
+        
         public String getUsername() { return username; }
         public void setUsername(String username) { this.username = username; }
         public String getPassword() { return password; }
@@ -91,7 +83,7 @@ public class AuthController {
     public static class RegisterRequest {
         private String username;
         private String password;
-        // getters and setters
+        
         public String getUsername() { return username; }
         public void setUsername(String username) { this.username = username; }
         public String getPassword() { return password; }
